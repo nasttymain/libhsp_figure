@@ -1,0 +1,138 @@
+#module modtriangle
+	#deffunc _modt_init
+		dim initialized
+		initialized = 1
+		dim x,4
+		dim y,4
+	return
+	#deffunc trianglef int x1,int y1,int x2,int y2,int x3,int y3
+		triangle x1,y1,x2,y2,x3,y3
+		if limit(x1, -32768, 32768) != x1 or limit(x2, -32768, 32768) != x2 or limit(x3, -32768, 32768) != x3{
+			//logmes "GSQUARE X OUT OF RANGE!"
+			return 1
+		}
+		if limit(y1, -32768, 32768) != y1 or limit(y2, -32768, 32768) != y2 or limit(y3, -32768, 32768) != y3{
+			//logmes "GSQUARE Y OUT OF RANGE!"
+			return 1
+		}
+		if initialized = 0{
+			_modt_init
+		}
+		x(0)=x1,x2,x3,x3
+		y(0)=y1,y2,y3,y3
+		gsquare -1,x,y
+	return 0
+	#deffunc triangle int x1,int y1,int x2,int y2,int x3,int y3
+		line x1,y1,x2,y2
+		line x2,y2,x3,y3
+		line x3,y3,x1,y1
+	return 0
+#global
+#module figure_tools
+	#uselib "gdi32.dll"
+	#func global GetTextFaceA "GetTextFaceA" sptr,sptr,sptr
+	#define __F_BUFFERID 33
+	#define global F_LEFT 0
+	#define global F_XCENTER 1
+	#define global F_RIGHT 2
+	#define global F_TOP 3
+	#define global F_YCENTER 4
+	#define global F_BOTTOM 5
+	#define global F_COL_BACKGROUND $FFFFFF
+	#define global F_COL_TEXT $111111
+	#define global F_COL_INCONSID $777777
+	#define global F_COL_INVALID $CCCCCC
+	#define global F_COL_HIGHLIGHT $FF4444
+	#deffunc local __init
+		sel = ginfo_sel
+		sdim lpFacename
+		screen __F_BUFFERID, 1024, 256, SCREEN_HIDE
+		gsel sel
+		return
+	#define global label(%1,%2=0,%3=3) __label@figure_tools %1, %2, %3
+	#deffunc local __label str label_text, int x_alignment, int y_alignment
+		cx = ginfo_cx
+		cy = ginfo_cy
+		sel = ginfo_sel
+		mref bmscr, 67
+		fn = bmscr(32)
+		GetTextFaceA hdc, 64, varptr(lpFacename)
+		gsel __F_BUFFERID
+		pos 0, 0
+		font lpFacename, fn
+		mes label_text
+		mesx = ginfo_mesx
+		mesy = ginfo_mesy
+		gsel sel
+		if x_alignment = 1{
+			// x-centering
+			cx -= mesx / 2
+		}
+		if x_alignment = 2{
+			// x-right
+			cx -= mesx
+		}
+		if y_alignment = 4{
+			// y-centering
+			cy -= mesy / 2
+		}
+		if y_alignment = 5{
+			// y-bottom
+			cy -= mesy
+		}
+		pos cx, cy
+		mes label_text
+		return
+	#defcfunc __pgetrgb int x, int y
+		colr = ginfo_r
+		colg = ginfo_g
+		colb = ginfo_b
+		pget x, y
+		colrgb = ginfo_r * 65536 + ginfo_g * 256 + ginfo_b
+		color colr ,colg, colb
+	return colrgb
+	#define global arrow(%1,%2,%3,%4,%5=1,%6=18) __arrow@figure_tools %1, %2, %3, %4, %5, %6
+	#deffunc local __arrow int start_x, int start_y, int end_x, int end_y, int thickness, int head_length
+		line start_x, start_y, end_x, end_y
+		line end_x, end_y, end_x - cos(atan(end_y - start_y, end_x - start_x) + 0.5) * head_length, end_y - sin(atan(end_y - start_y, end_x - start_x)  + 0.5) * head_length
+		line end_x, end_y, end_x - cos(atan(end_y - start_y, end_x - start_x) - 0.5) * head_length, end_y - sin(atan(end_y - start_y, end_x - start_x)  - 0.5) * head_length
+		return
+#global
+#module figure_grid_tools
+	#deffunc local __init
+		gridxs = 32
+		gridys = 32
+		fsize = 20
+		return
+	#deffunc fcanvas int window_id, int x_grids, int y_grids
+		__init@figure_grid_tools
+		gsel window_id
+		gridx = double(x_grids) + 1
+		gridy = double(y_grids) + 1
+		return
+	#deffunc fgrid
+		repeat gridx + 1
+			xcnt = cnt
+			repeat gridy + 1
+				ycnt = cnt
+				rgbcolor F_COL_INVALID
+				line 0, (ycnt - 1) * gridys + 1, (gridx - 1) * gridxs + 1, (ycnt - 1) * gridys + 1
+				line (xcnt - 1) * gridxs + 1, 0, (xcnt - 1) * gridxs + 1, (ycnt - 1) * gridys + 1
+			loop
+		loop
+		return
+	#deffunc flabel double xposition, double yposition, str text, int x_alignment, int y_alignment
+		pos xposition * gridxs, yposition * gridys
+		label text, x_alignment, y_alignment
+		return
+	#deffunc farrow double xposition, double yposition, double xposition_end, double yposition_end
+		arrow xposition * gridxs, yposition * gridys, xposition_end * gridxs, yposition_end * gridys
+		return
+#global
+__init@figure_tools
+fcanvas 0, 8, 8
+fgrid
+pos 320, 240
+rgbcolor F_COL_TEXT
+flabel 4, 2.5, "Hello, World!", F_XCENTER, F_YCENTER
+farrow 1, 3, 7, 3
