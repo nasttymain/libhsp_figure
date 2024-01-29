@@ -99,6 +99,7 @@
 		return
 #global
 #module figure_grid_tools
+	#define __F_EXPORTBUFFERID 34
 	#deffunc local __init
 		gridxs = 32
 		gridys = 32
@@ -128,6 +129,17 @@
 	#deffunc farrow double xposition, double yposition, double xposition_end, double yposition_end
 		arrow xposition * gridxs, yposition * gridys, xposition_end * gridxs, yposition_end * gridys
 		return
+	#deffunc fline double xposition, double yposition, double xposition_end, double yposition_end
+		line xposition * gridxs, yposition * gridys, xposition_end * gridxs, yposition_end * gridys
+		return
+	#deffunc fexport str filename
+		sel = ginfo_sel
+		buffer __F_EXPORTBUFFERID, (gridx - 1) * gridxs + 3, (gridy - 1) * gridys + 3
+		pos 0, 0
+		gcopy sel, 0, 0, (gridx - 1) * gridxs + 3, (gridy - 1) * gridys + 3
+		bmpsave filename
+		gsel sel
+		return
 #global
 __init@figure_tools
 fcanvas 0, 8, 8
@@ -136,3 +148,4 @@ pos 320, 240
 rgbcolor F_COL_TEXT
 flabel 4, 2.5, "Hello, World!", F_XCENTER, F_YCENTER
 farrow 1, 3, 7, 3
+fexport "test.bmp"
